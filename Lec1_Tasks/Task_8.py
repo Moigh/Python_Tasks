@@ -4,7 +4,7 @@ pins = ['I'] * n
 
 for j in range(k):
     l, r = map(int, input().split())
-    l-=l
+    l -= 1
     for i in range(l, r):
         pins[i] = '.'
 
