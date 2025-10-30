@@ -1,11 +1,10 @@
-def get_word_frequency(text):
+def freq_analizer(text):
     words = text.split()
     freq = {}
     for word in words:
         freq[word] = freq.get(word, 0) + 1
     return freq
 
-# Использование
 text = input()
-freq_dict = get_word_frequency(text)
+freq_dict = freq_analizer(text)
 print(freq_dict)
