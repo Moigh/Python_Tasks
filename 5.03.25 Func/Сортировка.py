@@ -20,13 +20,11 @@ students = [
     }
 ]
 
-def sort_students(students):
-    return sorted(students, key=lambda student: (
+sorted_students = sorted(students, key=lambda student: (
         -len([grade for grade in student['grades'] if grade['score'] > 80]),
         -sum(grade['score'] for grade in student['grades']) / len(student['grades']) if student['grades'] else 0,
         student['name']
     ))
 
-sorted_students = sort_students(students)
 import pprint
 pprint.pprint(sorted_students)
