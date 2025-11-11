@@ -117,7 +117,6 @@ class GameScreen(GameState):
             self._check_food_collision()
     
     def _check_food_collision(self):
-        """Проверяет, съела ли змейка яблочко"""
         # Получаем позицию головы змейки
         head_x, head_y = self.snake.body[0]
         
@@ -126,6 +125,8 @@ class GameScreen(GameState):
         
         # Если голова змейки на той же клетке, что и яблочко
         if head_x == food_x and head_y == food_y:
+            # Увеличиваем счет
+            self.score += 1
             # Яблочко появляется в новом месте
             self.food.respawn()
     
