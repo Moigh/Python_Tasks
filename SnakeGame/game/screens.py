@@ -129,34 +129,28 @@ class BaseGameScreen(GameState):
     
     def _load_level(self, level_file):
         """Загружает уровень из файла"""
-        try:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.dirname(current_dir)
-            filename = os.path.join(project_root, "data", "levels", level_file)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        filename = os.path.join(project_root, "data", "levels", level_file)
+        
+        with open(filename, 'r') as file:
+            level_data = [line.strip() for line in file]
+        
+        # Очищаем предыдущие стены
+        self.walls = []
+        self.wall_sprites.empty()
+        
+        # Парсим уровень
+        for y, row in enumerate(level_data):
+            for x, cell in enumerate(row):
+                if cell == '#':  # Стена
+                    self.walls.append((x, y))
+                    wall = Wall(
+                        self.MARGIN, self.GAME_FIELD_Y,
+                        x, y, self.CELL_SIZE,
+                        self.wall_sprites
+                    )
             
-            with open(filename, 'r') as file:
-                level_data = [line.strip() for line in file]
-            
-            # Очищаем предыдущие стены
-            self.walls = []
-            self.wall_sprites.empty()
-            
-            # Парсим уровень
-            for y, row in enumerate(level_data):
-                for x, cell in enumerate(row):
-                    if cell == '#':  # Стена
-                        self.walls.append((x, y))
-                        wall = Wall(
-                            self.MARGIN, self.GAME_FIELD_Y,
-                            x, y, self.CELL_SIZE,
-                            self.wall_sprites
-                        )
-            
-            print(f"Загружен уровень из {level_file} с {len(self.walls)} стенами")
-            
-        except FileNotFoundError:
-            print(f"Уровень {level_file} не найден! Создаем пустой уровень.")
-            self.walls = []
     
     def handle_events(self, events):
         for event in events:

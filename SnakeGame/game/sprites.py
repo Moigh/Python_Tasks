@@ -9,12 +9,6 @@ def load_image(name):
     project_root = os.path.dirname(current_dir)
     fullname = os.path.join(project_root, "assets", "snake_parts", name)
     
-    if not os.path.isfile(fullname):
-        print(f"Предупреждение: файл {fullname} не найден!")
-        surf = pygame.Surface((40, 40))
-        surf.fill((255, 0, 0) if "food" in name else (0, 255, 0))
-        return surf
-    
     image = pygame.image.load(fullname)
     return image.convert_alpha()
 
@@ -125,6 +119,10 @@ class Snake:
                 to_prev = (prev_pos[0] - pos_x, prev_pos[1] - pos_y)
                 to_next = (next_pos[0] - pos_x, next_pos[1] - pos_y)
                 
+                # ИСПРАВЛЕНИЕ ТЕЛЕПОРТАЦИИ: нормализуем направления
+                to_prev = self._normalize_direction(to_prev)
+                to_next = self._normalize_direction(to_next)
+                
                 # Если это прямая линия - это тело
                 if to_prev[0] == -to_next[0] and to_prev[1] == -to_next[1]:
                     segment_type = 'body'
@@ -167,6 +165,18 @@ class Snake:
         new_dir_x, new_dir_y = new_direction
         if (new_dir_x != -current_dir_x or new_dir_y != -current_dir_y):
             self.direction = new_direction
+
+    def _normalize_direction(self, direction):
+        """Исправляет направление при телепортации"""
+        dx, dy = direction
+        
+        # Если разница координат больше 1 - это телепортация
+        if abs(dx) > 1:
+            dx = -1 if dx > 0 else 1  # Исправляем на нормальное направление
+        if abs(dy) > 1:
+            dy = -1 if dy > 0 else 1
+        
+        return (dx, dy)
     
     def draw(self, screen):
         self.segments.draw(screen)
