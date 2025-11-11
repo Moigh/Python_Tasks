@@ -304,6 +304,12 @@ class FreePlayScreen(BaseGameScreen):
     """Экран свободной игры (уровень без стен)"""
     def __init__(self, width, height):
         super().__init__(width, height, "Free Play", "level_0.txt")
+        
+    def _check_win_condition(self):
+        """Проверяет условие победы - заполнено все поле"""
+        if self.score >= 209:
+            return FreePlayVictoryScreen(self.width, self.height, self.score)
+        return None
 
 class LevelScreen(BaseGameScreen):
     """Экран игры по уровням"""
@@ -313,7 +319,7 @@ class LevelScreen(BaseGameScreen):
 
     def _check_win_condition(self):
         """Проверяет условие победы - набрано 10 очков"""
-        if self.score >= 1:
+        if self.score >= 10:
             return VictoryScreen(self.width, self.height, self.score, self.level_number)
         return None
 
@@ -365,4 +371,49 @@ class VictoryScreen(GameState):
         
         exit_text = font.render("Press ESC to exit", True, (255, 255, 255))
         exit_rect = exit_text.get_rect(center=(self.width//2, self.height//2 + 120))
+        screen.blit(exit_text, exit_rect)
+
+class FreePlayVictoryScreen(GameState):
+    def __init__(self, width, height, final_score):
+        super().__init__(width, height)
+        self.final_score = final_score
+    
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    # Начать заново
+                    return FreePlayScreen(self.width, self.height)
+                elif event.key == pygame.K_ESCAPE:
+                    return MenuScreen(self.width, self.height)
+        return self
+    
+    def draw(self, screen):
+        # Черный фон
+        screen.fill((0, 0, 0))
+        
+        # Рамка на весь экран
+        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN, self.MARGIN, 760, 560), 2)
+        
+        # Заголовок победы
+        font = pygame.font.Font(None, 72)
+        title_text = font.render("YOU WIN!", True, (0, 255, 0))  # Зеленый цвет
+        title_rect = title_text.get_rect(center=(self.width//2, self.height//2 - 80))
+        screen.blit(title_text, title_rect)
+        
+        # Максимально возможный счет
+        max_score = 11 * 19  # 209 очков
+        font = pygame.font.Font(None, 48)
+        score_text = font.render(f"Perfect Score: {self.final_score:03d}/{max_score}", True, (255, 255, 255))
+        score_rect = score_text.get_rect(center=(self.width//2, self.height//2))
+        screen.blit(score_text, score_rect)
+        
+        # Инструкция
+        font = pygame.font.Font(None, 36)
+        restart_text = font.render("Press SPACE to play again", True, (255, 255, 255))
+        restart_rect = restart_text.get_rect(center=(self.width//2, self.height//2 + 60))
+        screen.blit(restart_text, restart_rect)
+        
+        exit_text = font.render("Press ESC for main menu", True, (255, 255, 255))
+        exit_rect = exit_text.get_rect(center=(self.width//2, self.height//2 + 100))
         screen.blit(exit_text, exit_rect)
