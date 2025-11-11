@@ -22,13 +22,26 @@ class Snake:
         ]
     
     def move(self):
-        """Двигает змейку в текущем направлении"""
         # Получаем текущую позицию головы
         head_x, head_y = self.body[0]
         
         # Вычисляем новую позицию головы
         dir_x, dir_y = self.direction
-        new_head = (head_x + dir_x, head_y + dir_y)
+        new_head_x = head_x + dir_x
+        new_head_y = head_y + dir_y
+        
+        # Телепортация через границы
+        if new_head_x < 0:
+            new_head_x = self.cells_x - 1  # Появляемся справа
+        elif new_head_x >= self.cells_x:
+            new_head_x = 0  # Появляемся слева
+            
+        if new_head_y < 0:
+            new_head_y = self.cells_y - 1  # Появляемся снизу
+        elif new_head_y >= self.cells_y:
+            new_head_y = 0  # Появляемся сверху
+        
+        new_head = (new_head_x, new_head_y)
         
         # Добавляем новую голову в начало
         self.body.insert(0, new_head)
