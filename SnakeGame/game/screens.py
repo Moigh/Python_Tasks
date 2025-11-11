@@ -33,9 +33,9 @@ class MenuScreen(GameState):
                     self.selected_index = (self.selected_index + 1) % len(self.options)
                 elif event.key == pygame.K_SPACE:
                     if self.selected_index == 0:  # Free Play
-                        return GameScreen(self.width, self.height)
+                        return FreePlayScreen(self.width, self.height)
                     elif self.selected_index == 1:  # Level Mode
-                        print("Level Mode selected - not implemented yet")
+                        return LevelScreen(self.width, self.height)
                         return self  # Пока остаемся в меню
                     elif self.selected_index == 2:  # Exit
                         return None
@@ -81,8 +81,8 @@ class MenuScreen(GameState):
         instruction_rect = instruction_text.get_rect(center=(self.width//2, self.height//2 + 200))
         screen.blit(instruction_text, instruction_rect)
 
-class GameScreen(GameState):
-    def __init__(self, width, height):
+class BaseGameScreen(GameState):
+    def __init__(self, width, height, mode_name):
         super().__init__(width, height)
         
         # Константы для игрового поля
@@ -95,6 +95,7 @@ class GameScreen(GameState):
         self.GAME_FIELD_Y = self.TOP_PANEL_Y + self.TOP_PANEL_HEIGHT + self.MARGIN
         self.GAME_FIELD_HEIGHT = self.CELLS_Y * self.CELL_SIZE
         
+        self.game_mode = mode_name
         self.level = 1
         self.score = 0
         
@@ -171,7 +172,12 @@ class GameScreen(GameState):
                 self.collision_timer = current_time
             else:
                 self._check_food_collision()
+                self._check_win_condition()  # Проверка победы
         return self
+        
+    def _check_win_condition(self):
+        """Проверяет условие победы (переопределяется в дочерних классах)"""
+        pass
     
     def _check_food_collision(self):
         # Получаем позицию головы змейки
@@ -222,8 +228,8 @@ class GameScreen(GameState):
         font = pygame.font.Font(None, 48)
         
         # Уровень слева
-        level_text = font.render(f"LVL. {self.level}", True, (255, 255, 255))
-        screen.blit(level_text, (50, 50))
+        mode_text = font.render(self.game_mode, True, (255, 255, 255))
+        screen.blit(mode_text, (50, 50))
         
         # Счет справа (3 цифры)
         score_text = font.render(f"Score: {self.score:03d}", True, (255, 255, 255))
@@ -275,3 +281,23 @@ class GameOverScreen(GameState):
         exit_text = font.render("Press ESC to exit", True, (255, 255, 255))
         exit_rect = exit_text.get_rect(center=(self.width//2, self.height//2 + 100))
         screen.blit(exit_text, exit_rect)
+
+class FreePlayScreen(BaseGameScreen):
+    """Экран свободной игры"""
+    def __init__(self, width, height):
+        super().__init__(width, height, "Free Play")
+
+class LevelScreen(BaseGameScreen):
+    """Экран игры по уровням"""
+    def __init__(self, width, height, level_number=1):
+        self.level_number = level_number
+        super().__init__(width, height, f"Level {level_number}")
+        
+    def _initialize_game(self):
+        """Загружает уровень и инициализирует игру"""
+        self._load_level(self.level_number)
+        self.food.respawn(self.snake.body + self.walls)
+        
+    def _load_level(self, level_number):
+        """Загружает уровень из файла"""
+            
