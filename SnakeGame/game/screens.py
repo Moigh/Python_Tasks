@@ -88,28 +88,37 @@ class GameScreen(GameState):
         # Таймер для автоматического движения
         self.last_move_time = 0
         self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
+         # Очередь для хранения направлений
+        self.direction_queue = []
     
     def handle_events(self, events):
+        # Сбрасываем флаг в начале обработки событий
+        self.direction_changed = False
+        
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     # Возвращаемся в меню
                     return MenuScreen(self.width, self.height)
-                # Управление змейкой - только меняем направление
+                # Добавляем направление в очередь
                 elif event.key == pygame.K_UP:
-                    self.snake.change_direction((0, -1))
+                    self.direction_queue.append((0, -1))
                 elif event.key == pygame.K_DOWN:
-                    self.snake.change_direction((0, 1))
+                    self.direction_queue.append((0, 1))
                 elif event.key == pygame.K_LEFT:
-                    self.snake.change_direction((-1, 0))
+                    self.direction_queue.append((-1, 0))
                 elif event.key == pygame.K_RIGHT:
-                    self.snake.change_direction((1, 0))
+                    self.direction_queue.append((1, 0))
         return self
     
     def update(self):
         # Автоматическое движение змейки по времени
         current_time = pygame.time.get_ticks()
         if current_time - self.last_move_time > self.move_interval:
+            # Берем первое направление из очереди (если есть)
+            if self.direction_queue:
+                next_dir = self.direction_queue.pop(0)  # Берем и удаляем первый элемент
+                self.snake.change_direction(next_dir)
             self.snake.move()
             self.last_move_time = current_time
             
@@ -127,6 +136,8 @@ class GameScreen(GameState):
         if head_x == food_x and head_y == food_y:
             # Увеличиваем счет
             self.score += 1
+            # Змейка растет
+            self.snake.grow()
             # Яблочко появляется в новом месте
             self.food.respawn()
     

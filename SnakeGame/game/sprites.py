@@ -21,6 +21,13 @@ class Snake:
             (start_x - 2, start_y),  # Тело 2  
             (start_x - 3, start_y)   # Хвост
         ]
+
+         # Флаг роста змейки
+        self.grow_pending = False
+
+    def grow(self):
+        """Устанавливает флаг роста - змейка увеличится при следующем движении"""
+        self.grow_pending = True
     
     def move(self):
         # Получаем текущую позицию головы
@@ -47,8 +54,11 @@ class Snake:
         # Добавляем новую голову в начало
         self.body.insert(0, new_head)
         
-        # Удаляем последний сегмент (хвост)
-        self.body.pop()
+        # Удаляем хвост только если не нужно расти
+        if not self.grow_pending:
+            self.body.pop()
+        else:
+            self.grow_pending = False  # Сбрасываем флаг роста
     
     def change_direction(self, new_direction):
         # Запрещаем движение в противоположном направлении
