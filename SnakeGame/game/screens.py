@@ -85,6 +85,8 @@ class GameScreen(GameState):
             cell_size=self.CELL_SIZE
         )
         
+        self.food.respawn(self.snake.body)
+        
         # Таймер для автоматического движения
         self.last_move_time = 0
         self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
@@ -154,7 +156,7 @@ class GameScreen(GameState):
             # Змейка растет
             self.snake.grow()
             # Яблочко появляется в новом месте
-            self.food.respawn()
+            self.food.respawn(self.snake.body)
 
     def _check_self_collision(self):
         """Проверяет столкновение головы змейки с телом"""

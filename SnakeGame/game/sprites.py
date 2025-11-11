@@ -86,16 +86,30 @@ class Food:
         
         # Позиция яблочка в клетках
         self.position = (0, 0)
-        
-        # Создаем случайную позицию при инициализации
-        self.respawn()
     
-    def respawn(self):
-        """Создает яблочко в случайной позиции на поле"""
-        self.position = (
-            random.randint(0, self.cells_x - 1),
-            random.randint(0, self.cells_y - 1)
-        )
+    def respawn(self, snake_body):
+        """Создает яблочко в случайной позиции, не занятой змейкой"""
+        max_attempts = 100  # Максимальное количество попыток найти свободную клетку
+        
+        for attempt in range(max_attempts):
+            new_position = (
+                random.randint(0, self.cells_x - 1),
+                random.randint(0, self.cells_y - 1)
+            )
+            
+            # Проверяем, что позиция не занята змейкой
+            if new_position not in snake_body:
+                self.position = new_position
+                return
+        
+        # Если не нашли свободную клетку за max_attempts попыток
+        # Помещаем в первую свободную клетку (если есть)
+        for x in range(self.cells_x):
+            for y in range(self.cells_y):
+                if (x, y) not in snake_body:
+                    self.position = (x, y)
+                    return
+        
     
     def draw(self, screen):
         """Рисует яблочко как красный круг"""
