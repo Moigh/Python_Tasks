@@ -171,3 +171,47 @@ class GameScreen(GameState):
         score_rect.right = 750
         score_rect.top = 50
         screen.blit(score_text, score_rect)
+
+class GameOverScreen(GameState):
+    def __init__(self, width, height, final_score):
+        super().__init__(width, height)
+        self.final_score = final_score
+    
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    # Возвращаемся в главное меню
+                    return MenuScreen(self.width, self.height)
+                elif event.key == pygame.K_ESCAPE:
+                    return None  # Выход из игры
+        return self
+    
+    def draw(self, screen):
+        # Черный фон
+        screen.fill((0, 0, 0))
+        
+        # Рамка на весь экран
+        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN, self.MARGIN, 760, 560), 2)
+        
+        # Заголовок
+        font = pygame.font.Font(None, 72)
+        title_text = font.render("GAME OVER", True, (255, 0, 0))  # Красный цвет
+        title_rect = title_text.get_rect(center=(self.width//2, self.height//2 - 80))
+        screen.blit(title_text, title_rect)
+        
+        # Итоговый счет
+        font = pygame.font.Font(None, 48)
+        score_text = font.render(f"Final Score: {self.final_score:03d}", True, (255, 255, 255))
+        score_rect = score_text.get_rect(center=(self.width//2, self.height//2))
+        screen.blit(score_text, score_rect)
+        
+        # Инструкция
+        font = pygame.font.Font(None, 36)
+        restart_text = font.render("Press SPACE for main menu", True, (255, 255, 255))
+        restart_rect = restart_text.get_rect(center=(self.width//2, self.height//2 + 60))
+        screen.blit(restart_text, restart_rect)
+        
+        exit_text = font.render("Press ESC to exit", True, (255, 255, 255))
+        exit_rect = exit_text.get_rect(center=(self.width//2, self.height//2 + 100))
+        screen.blit(exit_text, exit_rect)
