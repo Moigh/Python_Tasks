@@ -17,14 +17,30 @@ class GameState:
         pass
 
 class MenuScreen(GameState):
+    def __init__(self, width, height):
+        super().__init__(width, height)
+        self.options = ["Free Play", "Level Mode", "Exit"]
+        self.selected_index = 0
+        self.option_width = 300
+        self.option_height = 50
+    
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    # Переходим к игровому экрану
-                    return GameScreen(self.width, self.height)
+                if event.key == pygame.K_UP:
+                    self.selected_index = (self.selected_index - 1) % len(self.options)
+                elif event.key == pygame.K_DOWN:
+                    self.selected_index = (self.selected_index + 1) % len(self.options)
+                elif event.key == pygame.K_SPACE:
+                    if self.selected_index == 0:  # Free Play
+                        return GameScreen(self.width, self.height)
+                    elif self.selected_index == 1:  # Level Mode
+                        print("Level Mode selected - not implemented yet")
+                        return self  # Пока остаемся в меню
+                    elif self.selected_index == 2:  # Exit
+                        return None
                 elif event.key == pygame.K_ESCAPE:
-                    return None  # Выход из игры
+                    return None
         return self
     
     def draw(self, screen):
@@ -35,20 +51,35 @@ class MenuScreen(GameState):
         pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN, self.MARGIN, 760, 560), 2)
         
         # Заголовок игры
-        font = pygame.font.Font(None, 72)
+        font = pygame.font.Font(None, 90)
         title_text = font.render("SNAKE", True, (255, 255, 255))
-        title_rect = title_text.get_rect(center=(self.width//2, self.height//2 - 50))
+        title_rect = title_text.get_rect(center=(self.width//2, self.height//2 - 120))
         screen.blit(title_text, title_rect)
         
-        # Инструкция
-        font = pygame.font.Font(None, 36)
-        start_text = font.render("Press SPACE to start", True, (255, 255, 255))
-        start_rect = start_text.get_rect(center=(self.width//2, self.height//2 + 50))
-        screen.blit(start_text, start_rect)
+        # Опции меню
+        font = pygame.font.Font(None, 48)
+        for i, option in enumerate(self.options):
+            # Позиция для опции
+            option_rect = pygame.Rect(0, 0, self.option_width, self.option_height)
+            option_rect.center = (self.width//2, self.height//2 - 30 + i * 60)
+            
+            # Рисуем прямоугольник для выбранной опции
+            if i == self.selected_index:
+                pygame.draw.rect(screen, (200, 200, 200), option_rect)  # Светло-серый фон
+                text_color = (80, 80, 80)  # Темно-серый текст
+            else:
+                text_color = (255, 255, 255)  # Белый текст
+            
+            # Рисуем текст опции
+            option_text = font.render(option, True, text_color)
+            text_rect = option_text.get_rect(center=option_rect.center)
+            screen.blit(option_text, text_rect)
         
-        exit_text = font.render("Press ESC to exit", True, (255, 255, 255))
-        exit_rect = exit_text.get_rect(center=(self.width//2, self.height//2 + 100))
-        screen.blit(exit_text, exit_rect)
+        # Инструкция
+        font = pygame.font.Font(None, 32)
+        instruction_text = font.render("Use ARROWS to navigate, SPACE to select", True, (155, 155, 155))
+        instruction_rect = instruction_text.get_rect(center=(self.width//2, self.height//2 + 200))
+        screen.blit(instruction_text, instruction_rect)
 
 class GameScreen(GameState):
     def __init__(self, width, height):
