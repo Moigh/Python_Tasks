@@ -1,4 +1,5 @@
 import pygame
+import random
 
 class Snake:
     def __init__(self, field_x, field_y, cells_x, cells_y, cell_size):
@@ -64,3 +65,33 @@ class Snake:
             y = self.field_y + segment_y * self.cell_size            
             # Рисуем зеленый квадрат
             pygame.draw.rect(screen, (0, 255, 0), (x, y, self.cell_size, self.cell_size))
+
+class Food:
+    def __init__(self, field_x, field_y, cells_x, cells_y, cell_size):
+        self.field_x = field_x
+        self.field_y = field_y
+        self.cells_x = cells_x
+        self.cells_y = cells_y
+        self.cell_size = cell_size
+        
+        # Позиция яблочка в клетках
+        self.position = (0, 0)
+        
+        # Создаем случайную позицию при инициализации
+        self.respawn()
+    
+    def respawn(self):
+        """Создает яблочко в случайной позиции на поле"""
+        self.position = (
+            random.randint(0, self.cells_x - 1),
+            random.randint(0, self.cells_y - 1)
+        )
+    
+    def draw(self, screen):
+        """Рисует яблочко как красный круг"""
+        x = self.field_x + self.position[0] * self.cell_size + self.cell_size // 2
+        y = self.field_y + self.position[1] * self.cell_size + self.cell_size // 2
+        radius = self.cell_size // 2 - 2  # Чуть меньше чем клетка
+        
+        # Рисуем красный круг (яблочко)
+        pygame.draw.circle(screen, (255, 0, 0), (x, y), radius)

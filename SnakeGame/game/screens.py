@@ -1,5 +1,5 @@
 import pygame
-from .sprites import Snake
+from .sprites import Food, Snake
 
 class GameState:
     def __init__(self, width, height):
@@ -76,6 +76,14 @@ class GameScreen(GameState):
             cell_size=self.CELL_SIZE
         )
         
+        self.food = Food(
+            field_x=self.MARGIN,
+            field_y=self.GAME_FIELD_Y,
+            cells_x=self.CELLS_X,
+            cells_y=self.CELLS_Y,
+            cell_size=self.CELL_SIZE
+        )
+
         # Таймер для автоматического движения
         self.last_move_time = 0
         self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
@@ -110,6 +118,8 @@ class GameScreen(GameState):
         
         # Рисуем змейку
         self.snake.draw(screen)
+        # Рисуем яблоко
+        self.food.draw(screen)
         
         # Рисуем игровое поле
         pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN - 2, self.GAME_FIELD_Y, self.PANEL_WIDTH + 4, self.GAME_FIELD_HEIGHT), 2)
