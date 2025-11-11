@@ -119,3 +119,18 @@ class Food:
         
         # Рисуем красный круг (яблочко)
         pygame.draw.circle(screen, (255, 0, 0), (x, y), radius)
+
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, field_x, field_y, cell_x, cell_y, cell_size, *groups):
+        super().__init__(*groups)
+        self.field_x = field_x
+        self.field_y = field_y
+        self.cell_size = cell_size
+        
+        # Создаем поверхность для стены
+        self.image = pygame.Surface((cell_size, cell_size))
+        self.image.fill((100, 100, 100))  # Серый цвет для стен
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = field_x + cell_x * cell_size
+        self.rect.y = field_y + cell_y * cell_size

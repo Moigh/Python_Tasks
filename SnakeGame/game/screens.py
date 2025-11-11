@@ -1,5 +1,5 @@
 import pygame
-from .sprites import Snake, Food
+from .sprites import Snake, Food, Wall
 
 class GameState:
     def __init__(self, width, height):
@@ -36,7 +36,6 @@ class MenuScreen(GameState):
                         return FreePlayScreen(self.width, self.height)
                     elif self.selected_index == 1:  # Level Mode
                         return LevelScreen(self.width, self.height)
-                        return self  # Пока остаемся в меню
                     elif self.selected_index == 2:  # Exit
                         return None
                 elif event.key == pygame.K_ESCAPE:
@@ -291,13 +290,72 @@ class LevelScreen(BaseGameScreen):
     """Экран игры по уровням"""
     def __init__(self, width, height, level_number=1):
         self.level_number = level_number
+        self.walls = []  # Список позиций стен
+        self.wall_sprites = pygame.sprite.Group()
         super().__init__(width, height, f"Level {level_number}")
-        
-    def _initialize_game(self):
-        """Загружает уровень и инициализирует игру"""
-        self._load_level(self.level_number)
+        self._load_level(level_number)
         self.food.respawn(self.snake.body + self.walls)
         
     def _load_level(self, level_number):
         """Загружает уровень из файла"""
-            
+        import os
+        
+        # Получаем абсолютный путь к файлу уровня
+        current_dir = os.path.dirname(os.path.abspath(__file__)) 
+        project_root = os.path.dirname(current_dir)
+        filename = os.path.join(project_root, "data", "levels", f"level_{level_number}.txt")
+
+        """Загружает уровень из файла"""
+        with open(filename, 'r') as file:
+            level_data = [line.strip() for line in file]
+        
+        # Очищаем предыдущие стены
+        self.walls = []
+        self.wall_sprites.empty()
+        
+        # Парсим уровень
+        for y, row in enumerate(level_data):
+            for x, cell in enumerate(row):
+                if cell == '#':  # Стена
+                    self.walls.append((x, y))
+                    wall = Wall(
+                        self.MARGIN, self.GAME_FIELD_Y,
+                        x, y, self.CELL_SIZE,
+                        self.wall_sprites
+                    )
+        
+    def _check_collisions(self):
+        """Проверяет столкновения со стенами и с собой"""
+        return self._check_wall_collision() or self._check_self_collision()
+
+    def _check_wall_collision(self):
+        """Проверяет столкновение головы змейки со стенами"""
+        head_x, head_y = self.snake.body[0]
+        return (head_x, head_y) in self.walls
+
+    def _check_food_collision(self):
+        head_x, head_y = self.snake.body[0]
+        food_x, food_y = self.food.position
+        
+        if head_x == food_x and head_y == food_y:
+            self.score += 1
+            self.snake.grow()
+            # Учитываем стены при респавне яблочка
+            self.food.respawn(self.snake.body + self.walls)
+
+    def draw(self, screen):
+        # Черный фон
+        screen.fill((0, 0, 0))
+        
+        # Рисуем стены
+        self.wall_sprites.draw(screen)
+        
+        # Рисуем змейку и яблочко
+        self.snake.draw(screen)
+        self.food.draw(screen)
+        
+        # Рисуем игровое поле
+        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN - 2, self.GAME_FIELD_Y, self.PANEL_WIDTH + 4, self.GAME_FIELD_HEIGHT), 2)
+        
+        # Рисуем информацию в верхней панели
+        self._draw_ui(screen)
