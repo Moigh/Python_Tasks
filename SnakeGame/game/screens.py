@@ -195,7 +195,10 @@ class BaseGameScreen(GameState):
                 self.collision_timer = current_time
             else:
                 self._check_food_collision()
-                self._check_win_condition()
+                # Проверяем победу (может вернуть новый экран)
+                win_screen = self._check_win_condition()
+                if win_screen:
+                    return win_screen
         
         return self
     
@@ -308,6 +311,12 @@ class LevelScreen(BaseGameScreen):
         super().__init__(width, height, f"Level {level_number}", f"level_{level_number}.txt")
         self.level_number = level_number
 
+    def _check_win_condition(self):
+        """Проверяет условие победы - набрано 10 очков"""
+        if self.score >= 1:
+            return VictoryScreen(self.width, self.height, self.score, self.level_number)
+        return None
+
 class VictoryScreen(GameState):
     def __init__(self, width, height, final_score, level_number=None):
         super().__init__(width, height)
@@ -318,10 +327,14 @@ class VictoryScreen(GameState):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    # Для продолжения (пока возвращаем в меню)
-                    return MenuScreen(self.width, self.height)
+                    # Переход на следующий уровень
+                    if self.level_number + 1 < 6:
+                        next_level = self.level_number + 1
+                        return LevelScreen(self.width, self.height, next_level)
+                    else:
+                        return MenuScreen(self.width, self.height)
                 elif event.key == pygame.K_ESCAPE:
-                    return None  # Выход из игры
+                    return MenuScreen(self.width, self.height)
         return self
     
     def draw(self, screen):
@@ -343,11 +356,6 @@ class VictoryScreen(GameState):
             level_text = font.render(f"Level {self.level_number} Completed", True, (255, 255, 255))
             level_rect = level_text.get_rect(center=(self.width//2, self.height//2 - 30))
             screen.blit(level_text, level_rect)
-        
-        # Итоговый счет
-        score_text = font.render(f"Final Score: {self.final_score:03d}", True, (255, 255, 255))
-        score_rect = score_text.get_rect(center=(self.width//2, self.height//2 + 20))
-        screen.blit(score_text, score_rect)
         
         # Инструкция
         font = pygame.font.Font(None, 36)
