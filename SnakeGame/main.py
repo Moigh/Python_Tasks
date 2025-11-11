@@ -22,10 +22,15 @@ def main():
                 running = False
         
         new_screen = current_screen.handle_events(events)
+        
         if new_screen is None:
             running = False
         elif new_screen != current_screen:
             current_screen = new_screen
+        else:
+            new_screen = current_screen.update()
+            if new_screen is not None and new_screen != current_screen:
+                current_screen = new_screen
         
         current_screen.update()
         current_screen.draw(screen)

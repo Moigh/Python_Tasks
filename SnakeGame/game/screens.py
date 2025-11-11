@@ -90,10 +90,13 @@ class GameScreen(GameState):
         self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
          # Очередь для хранения направлений
         self.direction_queue = []
+        
+        # Флаги для обработки столкновения
+        self.game_over = False
+        self.collision_timer = 0
+        self.collision_delay = 1000  # 1 секунда задержки перед переходом
     
     def handle_events(self, events):
-        # Сбрасываем флаг в начале обработки событий
-        self.direction_changed = False
         
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -112,6 +115,13 @@ class GameScreen(GameState):
         return self
     
     def update(self):
+        # Если игра уже окончена, ждем перед переходом
+        if self.game_over:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.collision_timer > self.collision_delay:
+                return GameOverScreen(self.width, self.height, self.score)
+            return self
+        
         # Автоматическое движение змейки по времени
         current_time = pygame.time.get_ticks()
         if current_time - self.last_move_time > self.move_interval:
@@ -122,8 +132,13 @@ class GameScreen(GameState):
             self.snake.move()
             self.last_move_time = current_time
             
-            # Проверяем столкновение с яблочком после движения
-            self._check_food_collision()
+            # Проверяем столкновения
+            if self._check_self_collision():
+                self.game_over = True
+                self.collision_timer = current_time
+            else:
+                self._check_food_collision()
+        return self
     
     def _check_food_collision(self):
         # Получаем позицию головы змейки
@@ -140,6 +155,18 @@ class GameScreen(GameState):
             self.snake.grow()
             # Яблочко появляется в новом месте
             self.food.respawn()
+
+    def _check_self_collision(self):
+        """Проверяет столкновение головы змейки с телом"""
+        
+        head_x, head_y = self.snake.body[0]
+        
+        # Проверяем все сегменты кроме головы
+        for segment_x, segment_y in self.snake.body[1:]:
+            if head_x == segment_x and head_y == segment_y:                
+                return True
+        
+        return False
     
     def draw(self, screen):
         # Черный фон
