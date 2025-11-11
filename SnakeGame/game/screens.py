@@ -1,5 +1,5 @@
 import pygame
-from .sprites import Food, Snake
+from .sprites import Snake, Food
 
 class GameState:
     def __init__(self, width, height):
@@ -76,6 +76,7 @@ class GameScreen(GameState):
             cell_size=self.CELL_SIZE
         )
         
+        # Создаем яблочко
         self.food = Food(
             field_x=self.MARGIN,
             field_y=self.GAME_FIELD_Y,
@@ -83,7 +84,7 @@ class GameScreen(GameState):
             cells_y=self.CELLS_Y,
             cell_size=self.CELL_SIZE
         )
-
+        
         # Таймер для автоматического движения
         self.last_move_time = 0
         self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
@@ -111,6 +112,22 @@ class GameScreen(GameState):
         if current_time - self.last_move_time > self.move_interval:
             self.snake.move()
             self.last_move_time = current_time
+            
+            # Проверяем столкновение с яблочком после движения
+            self._check_food_collision()
+    
+    def _check_food_collision(self):
+        """Проверяет, съела ли змейка яблочко"""
+        # Получаем позицию головы змейки
+        head_x, head_y = self.snake.body[0]
+        
+        # Получаем позицию яблочка
+        food_x, food_y = self.food.position
+        
+        # Если голова змейки на той же клетке, что и яблочко
+        if head_x == food_x and head_y == food_y:
+            # Яблочко появляется в новом месте
+            self.food.respawn()
     
     def draw(self, screen):
         # Черный фон
@@ -118,7 +135,8 @@ class GameScreen(GameState):
         
         # Рисуем змейку
         self.snake.draw(screen)
-        # Рисуем яблоко
+        
+        # Рисуем яблочко
         self.food.draw(screen)
         
         # Рисуем игровое поле
