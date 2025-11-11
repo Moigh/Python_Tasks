@@ -75,6 +75,10 @@ class GameScreen(GameState):
             cells_y=self.CELLS_Y,
             cell_size=self.CELL_SIZE
         )
+        
+        # Таймер для автоматического движения
+        self.last_move_time = 0
+        self.move_interval = 200  # миллисекунды между движениями (0.2 секунды)
     
     def handle_events(self, events):
         for event in events:
@@ -82,24 +86,23 @@ class GameScreen(GameState):
                 if event.key == pygame.K_ESCAPE:
                     # Возвращаемся в меню
                     return MenuScreen(self.width, self.height)
-                # Управление змейкой
+                # Управление змейкой - только меняем направление
                 elif event.key == pygame.K_UP:
                     self.snake.change_direction((0, -1))
-                    self.snake.move()
                 elif event.key == pygame.K_DOWN:
                     self.snake.change_direction((0, 1))
-                    self.snake.move()
                 elif event.key == pygame.K_LEFT:
                     self.snake.change_direction((-1, 0))
-                    self.snake.move()
                 elif event.key == pygame.K_RIGHT:
                     self.snake.change_direction((1, 0))
-                    self.snake.move()
         return self
     
     def update(self):
-        # Пока ничего не обновляем автоматически
-        pass
+        # Автоматическое движение змейки по времени
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_move_time > self.move_interval:
+            self.snake.move()
+            self.last_move_time = current_time
     
     def draw(self, screen):
         # Черный фон
@@ -109,14 +112,13 @@ class GameScreen(GameState):
         self.snake.draw(screen)
         
         # Рисуем игровое поле
-        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN - 2, self.GAME_FIELD_Y, self.PANEL_WIDTH + 4, self.GAME_FIELD_HEIGHT), 2)  # Верхняя панель
+        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN - 2, self.GAME_FIELD_Y, self.PANEL_WIDTH + 4, self.GAME_FIELD_HEIGHT), 2)
         
         # Рисуем информацию в верхней панели
         self._draw_ui(screen)
-        
     
     def _draw_ui(self, screen):
-        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN, self.TOP_PANEL_Y, self.PANEL_WIDTH, self.TOP_PANEL_HEIGHT), 2)  # Верхняя панель
+        pygame.draw.rect(screen, (255, 255, 255), (self.MARGIN, self.TOP_PANEL_Y, self.PANEL_WIDTH, self.TOP_PANEL_HEIGHT), 2)
         font = pygame.font.Font(None, 48)
         
         # Уровень слева
