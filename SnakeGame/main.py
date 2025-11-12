@@ -1,9 +1,13 @@
 import pygame
 import sys
 from game.screens import MenuScreen
+from game.sound import SoundManager
 
 def main():
     pygame.init()
+
+    # Создаем менеджер звуков
+    sound_manager = SoundManager()
     
     WIDTH, HEIGHT = 800, 600
     FPS = 60
@@ -12,7 +16,7 @@ def main():
     pygame.display.set_caption("Змейка")
     clock = pygame.time.Clock()
     
-    current_screen = MenuScreen(WIDTH, HEIGHT)
+    current_screen = MenuScreen(WIDTH, HEIGHT, sound_manager)
     running = True
     
     while running:

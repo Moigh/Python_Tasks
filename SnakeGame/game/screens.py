@@ -1,12 +1,14 @@
 import pygame
 import os
 from .sprites import Snake, Food, Wall
+from game.sound import SoundManager
 
 class GameState:
-    def __init__(self, width, height):
+    def __init__(self, width, height, sound_manager):
         self.MARGIN = 22
         self.width = width
         self.height = height
+        self.sound_manager = sound_manager
     
     def handle_events(self, events):
         pass
@@ -18,8 +20,8 @@ class GameState:
         pass
 
 class MenuScreen(GameState):
-    def __init__(self, width, height):
-        super().__init__(width, height)
+    def __init__(self, width, height, sound_manager):
+        super().__init__(width, height, sound_manager)
         self.options = ["Free Play", "Level Mode", "Exit"]
         self.selected_index = 0
         self.option_width = 300
@@ -28,15 +30,16 @@ class MenuScreen(GameState):
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
+                self.sound_manager.play_sound('button')
                 if event.key == pygame.K_UP:
                     self.selected_index = (self.selected_index - 1) % len(self.options)
                 elif event.key == pygame.K_DOWN:
                     self.selected_index = (self.selected_index + 1) % len(self.options)
                 elif event.key == pygame.K_SPACE:
                     if self.selected_index == 0:  # Free Play
-                        return FreePlayScreen(self.width, self.height)
+                        return FreePlayScreen(self.width, self.height, self.sound_manager)
                     elif self.selected_index == 1:  # Level Mode
-                        return LevelScreen(self.width, self.height)
+                        return LevelScreen(self.width, self.height, self.sound_manager)
                     elif self.selected_index == 2:  # Exit
                         return None
                 elif event.key == pygame.K_ESCAPE:
@@ -73,8 +76,8 @@ class MenuScreen(GameState):
         screen.blit(instruction_text, instruction_rect)
 
 class BaseGameScreen(GameState):
-    def __init__(self, width, height, mode_name, level_file="level_0.txt"):
-        super().__init__(width, height)
+    def __init__(self, width, height, sound_manager, mode_name, level_file="level_0.txt"):
+        super().__init__(width, height, sound_manager)
         
         # Константы для игрового поля
         self.TOP_PANEL_Y = self.MARGIN
@@ -95,6 +98,10 @@ class BaseGameScreen(GameState):
         
         # Загружаем уровень
         self._load_level(level_file)
+
+        
+        # Запускаем музыку
+        self.sound_manager.play_background_music()
         
         # Создаем змейку
         self.snake = Snake(
@@ -156,7 +163,7 @@ class BaseGameScreen(GameState):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return MenuScreen(self.width, self.height)
+                    return MenuScreen(self.width, self.height, self.sound_manager)
                 elif event.key == pygame.K_UP:
                     self.direction_queue.append((0, -1))
                 elif event.key == pygame.K_DOWN:
@@ -171,7 +178,7 @@ class BaseGameScreen(GameState):
         if self.game_over:
             current_time = pygame.time.get_ticks()
             if current_time - self.collision_timer > self.collision_delay:
-                return GameOverScreen(self.width, self.height, self.score)
+                return GameOverScreen(self.width, self.height, self.sound_manager, self.score)
             return self
         
         current_time = pygame.time.get_ticks()
@@ -184,7 +191,9 @@ class BaseGameScreen(GameState):
             self.last_move_time = current_time
             
             # Проверяем ВСЕ типы столкновений
-            if self._check_collisions():
+            if self._check_collisions():               
+                self.sound_manager.stop_background_music()    
+                self.sound_manager.play_sound('collision')
                 self.game_over = True
                 self.collision_timer = current_time
             else:
@@ -192,6 +201,8 @@ class BaseGameScreen(GameState):
                 # Проверяем победу (может вернуть новый экран)
                 win_screen = self._check_win_condition()
                 if win_screen:
+                    self.sound_manager.stop_background_music()
+                    self.sound_manager.play_sound('victory')
                     return win_screen
         
         return self
@@ -220,6 +231,7 @@ class BaseGameScreen(GameState):
         
         if head_x == food_x and head_y == food_y:
             self.score += 1
+            self.sound_manager.play_sound('eat')
             self.snake.grow()
             self.food.respawn(self.snake.body + self.walls)
     
@@ -257,15 +269,15 @@ class BaseGameScreen(GameState):
         screen.blit(score_text, score_rect)
 
 class GameOverScreen(GameState):
-    def __init__(self, width, height, final_score):
-        super().__init__(width, height)
+    def __init__(self, width, height, sound_manager, final_score):
+        super().__init__(width, height, sound_manager)
         self.final_score = final_score
     
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    return MenuScreen(self.width, self.height)
+                    return MenuScreen(self.width, self.height, self.sound_manager)
                 elif event.key == pygame.K_ESCAPE:
                     return None
         return self
@@ -296,8 +308,8 @@ class GameOverScreen(GameState):
 
 class FreePlayScreen(BaseGameScreen):
     """Экран свободной игры (уровень без стен)"""
-    def __init__(self, width, height):
-        super().__init__(width, height, "Free Play", "level_0.txt")
+    def __init__(self, width, height, sound_manager):
+        super().__init__(width, height, sound_manager, "Free Play", "level_0.txt")
         
     def _check_win_condition(self):
         """Проверяет условие победы - заполнено все поле"""
@@ -307,19 +319,19 @@ class FreePlayScreen(BaseGameScreen):
 
 class LevelScreen(BaseGameScreen):
     """Экран игры по уровням"""
-    def __init__(self, width, height, level_number=1):
-        super().__init__(width, height, f"Level {level_number}", f"level_{level_number}.txt")
+    def __init__(self, width, height, sound_manager, level_number=1):
+        super().__init__(width, height, sound_manager, f"Level {level_number}", f"level_{level_number}.txt")
         self.level_number = level_number
 
     def _check_win_condition(self):
         """Проверяет условие победы - набрано 10 очков"""
-        if self.score >= 10:
-            return VictoryScreen(self.width, self.height, self.score, self.level_number)
+        if self.score >= 4:
+            return VictoryScreen(self.width, self.height, self.sound_manager, self.score, self.level_number)
         return None
 
 class VictoryScreen(GameState):
-    def __init__(self, width, height, final_score, level_number=None):
-        super().__init__(width, height)
+    def __init__(self, width, height, sound_manager, final_score, level_number=None):
+        super().__init__(width, height, sound_manager)
         self.final_score = final_score
         self.level_number = level_number
     
@@ -330,11 +342,11 @@ class VictoryScreen(GameState):
                     # Переход на следующий уровень
                     if self.level_number + 1 < 6:
                         next_level = self.level_number + 1
-                        return LevelScreen(self.width, self.height, next_level)
+                        return LevelScreen(self.width, self.height, self.sound_manager, next_level)
                     else:
-                        return MenuScreen(self.width, self.height)
+                        return MenuScreen(self.width, self.height, self.sound_manager)
                 elif event.key == pygame.K_ESCAPE:
-                    return MenuScreen(self.width, self.height)
+                    return MenuScreen(self.width, self.height, self.sound_manager)
         return self
     
     def draw(self, screen):
@@ -377,9 +389,9 @@ class FreePlayVictoryScreen(GameState):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     # Начать заново
-                    return FreePlayScreen(self.width, self.height)
+                    return FreePlayScreen(self.width, self.height, self.sound_manager)
                 elif event.key == pygame.K_ESCAPE:
-                    return MenuScreen(self.width, self.height)
+                    return MenuScreen(self.width, self.height, self.sound_manager)
         return self
     
     def draw(self, screen):
