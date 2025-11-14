@@ -112,7 +112,8 @@ class Snake:
                 segment_type = 'tail'
                 prev_pos = self.body[i - 1]
                 # Направление хвоста - куда он смотрит
-                direction = (pos_x - prev_pos[0], pos_y - prev_pos[1])
+                to_prev = (pos_x - prev_pos[0], pos_y - prev_pos[1])
+                direction = self._normalize_direction(to_prev)
                 # Для хвоста передаем только одно направление
                 segment = SnakeSegment(segment_type, direction, None, pos_x, pos_y,
                                        self.field_x, self.field_y, self.cell_size)
